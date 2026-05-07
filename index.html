@@ -1,0 +1,1500 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Базові потреби клієнта · Урок для едвайзорів</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Questrial&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<style>
+  :root {
+    --bg: #151821;
+    --bg-deep: #0f1118;
+    --card: #1e2130;
+    --border: #333333;
+    --cream: #F4F4E6;
+    --g9: #999999;
+    --g6: #666666;
+    --g4: #444444;
+    --purple: #6F70F6;
+    --coral: #F06050;
+    --cyan: #5CCEFF;
+    --mint: #57FFA7;
+    --gold: #FFC60A;
+    --magenta: #FF48FF;
+    --serif: 'Lora', Georgia, serif;
+    --sans: 'Questrial', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--bg-deep);
+    color: var(--cream);
+    font-family: var(--sans);
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+    line-height: 1.5;
+  }
+  body { background: var(--bg-deep); min-height: 100vh; }
+
+  .bg-blobs { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+  .bg-blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: .22; will-change: transform; }
+  .bg-blob.b1 { width: 520px; height: 520px; background: var(--purple); top: 8%; left: -8%; animation: float1 32s ease-in-out infinite; }
+  .bg-blob.b2 { width: 420px; height: 420px; background: var(--cyan); top: 55%; right: -6%; animation: float2 38s ease-in-out infinite; }
+  .bg-blob.b3 { width: 360px; height: 360px; background: var(--magenta); top: 35%; left: 40%; opacity: .12; animation: float3 44s ease-in-out infinite; }
+  @keyframes float1 { 0%,100% { transform: translate(0,0) scale(1); } 33% { transform: translate(60px,-40px) scale(1.06); } 66% { transform: translate(-30px,50px) scale(0.95); } }
+  @keyframes float2 { 0%,100% { transform: translate(0,0) scale(1); } 33% { transform: translate(-50px,30px) scale(1.04); } 66% { transform: translate(40px,-40px) scale(0.96); } }
+  @keyframes float3 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(70px,-30px) scale(1.08); } }
+  @media (prefers-reduced-motion: reduce) { .bg-blob { animation: none; } }
+
+  /* ===== HUD ===== */
+  .hud {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    display: flex; align-items: center; gap: 18px;
+    padding: 16px 28px;
+    background: linear-gradient(180deg, rgba(15,17,24,.92) 0%, rgba(15,17,24,0) 100%);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  }
+  .logo {
+    font-family: var(--serif); font-weight: 400; font-size: 18px;
+    color: var(--cream); letter-spacing: .5px;
+  }
+  .logo .dot {
+    display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--purple); margin: 0 8px 2px 8px;
+    box-shadow: 0 0 12px var(--purple);
+  }
+  .progress-wrap {
+    flex: 1; height: 4px;
+    background: rgba(244,244,230,.06); border-radius: 999px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, var(--purple), var(--magenta), var(--cyan));
+    box-shadow: 0 0 10px rgba(111,112,246,.5);
+    transition: width .6s cubic-bezier(.2,.8,.2,1);
+  }
+
+  .streak-pill {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 12px; border-radius: 999px;
+    background: rgba(255,198,10,.06); border: 1px solid rgba(255,198,10,.3);
+    color: var(--g6); font-family: var(--sans); font-size: 13px; font-weight: 600;
+    transition: all .3s;
+    min-width: 78px; justify-content: center;
+  }
+  .streak-pill.active {
+    background: rgba(255,198,10,.18); border-color: var(--gold); color: var(--gold);
+    box-shadow: 0 0 14px rgba(255,198,10,.35);
+  }
+  .streak-pill .flame {
+    font-size: 14px; opacity: .35; transition: all .3s;
+  }
+  .streak-pill.active .flame { opacity: 1; transform: scale(1.15); }
+  .streak-pill .mult {
+    font-family: var(--serif); font-size: 11px; font-style: italic;
+    margin-left: 4px; opacity: .85;
+  }
+
+  .score-pill {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 16px; border-radius: 999px;
+    background: rgba(111,112,246,.08); border: 1px solid rgba(111,112,246,.35);
+    font-family: var(--sans); font-weight: 600; color: var(--cream);
+    font-size: 14px; min-width: 100px; justify-content: center;
+  }
+  .score-pill .xp-tag {
+    font-family: var(--serif); color: var(--purple);
+    font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase;
+    margin-right: 4px;
+  }
+  #scoreVal { font-variant-numeric: tabular-nums; }
+
+  /* ===== Sections ===== */
+  section {
+    position: relative; z-index: 10;
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    padding: 110px 6vw 80px;
+  }
+  .container {
+    width: 100%; max-width: 920px;
+    margin: 0 auto; text-align: center;
+  }
+
+  .section-tag {
+    display: inline-block;
+    font-family: var(--sans);
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 1.8px; color: var(--purple);
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border: 1px solid rgba(111,112,246,.35);
+    border-radius: 4px;
+    margin-bottom: 28px;
+    background: rgba(111,112,246,.05);
+  }
+
+  h1.title, h2.title {
+    font-family: var(--serif); font-weight: 400;
+    color: var(--cream); line-height: 1.15;
+    letter-spacing: -0.5px; margin-bottom: 22px;
+  }
+  h1.title { font-size: clamp(40px, 6vw, 64px); }
+  h2.title { font-size: clamp(28px, 4vw, 44px); }
+
+  .subtitle {
+    font-family: var(--sans);
+    font-size: clamp(15px, 1.4vw, 17px);
+    color: var(--g9); max-width: 640px;
+    margin: 0 auto 32px; line-height: 1.6;
+  }
+  .intro-text {
+    font-family: var(--sans);
+    font-size: clamp(16px, 1.5vw, 18px);
+    color: var(--g9); max-width: 660px;
+    margin: 0 auto 28px; line-height: 1.7;
+    text-align: left;
+  }
+  .intro-text strong { color: var(--cream); font-weight: 600; }
+  .intro-text em { color: var(--gold); font-style: italic; font-family: var(--serif); }
+
+  .cta {
+    display: inline-flex; align-items: center; gap: 12px;
+    padding: 16px 38px; border-radius: 6px;
+    background: var(--purple); color: var(--cream);
+    font-family: var(--sans); font-weight: 600;
+    font-size: 15px; letter-spacing: .3px;
+    border: none; cursor: pointer;
+    transition: transform .2s, box-shadow .2s, background .2s;
+    box-shadow: 0 4px 24px rgba(111,112,246,.35);
+  }
+  .cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(111,112,246,.5);
+    background: #7d7eff;
+  }
+  .cta.ghost {
+    background: transparent; border: 1.5px solid var(--purple);
+    color: var(--purple); box-shadow: none;
+  }
+  .cta.ghost:hover {
+    background: rgba(111,112,246,.1); color: var(--cream); border-color: #8d8eff;
+  }
+  .cta:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  /* ===== How-it-works ===== */
+  .how-it-works {
+    background: rgba(244,244,230,0.025);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px 26px;
+    margin: 0 auto 28px;
+    max-width: 660px;
+    text-align: left;
+  }
+  .hiw-tag {
+    font-family: var(--sans); font-size: 11px; font-weight: 600;
+    letter-spacing: 1.5px; color: var(--purple);
+    text-transform: uppercase; margin-bottom: 14px;
+  }
+  .hiw-steps { display: flex; flex-direction: column; gap: 12px; }
+  .hiw-step {
+    display: flex; align-items: flex-start; gap: 14px;
+    font-family: var(--sans); font-size: 14px; color: var(--g9); line-height: 1.55;
+  }
+  .hiw-step strong { color: var(--cream); font-weight: 600; }
+  .hiw-num {
+    flex-shrink: 0; width: 24px; height: 24px;
+    border-radius: 50%;
+    background: rgba(111,112,246,0.15);
+    border: 1px solid rgba(111,112,246,0.4);
+    color: var(--purple);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; margin-top: 1px;
+  }
+
+  /* ===== Pillars (3 needs) ===== */
+  .pillars {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 14px; margin: 24px auto 28px;
+    max-width: 660px; text-align: left;
+  }
+  @media (max-width: 600px) { .pillars { grid-template-columns: 1fr; } }
+  .pillar {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 18px 16px;
+    position: relative; overflow: hidden;
+  }
+  .pillar::before {
+    content: ''; position: absolute; top: 0; left: 0;
+    width: 3px; height: 100%; background: var(--accent, var(--purple));
+  }
+  .pillar.p1 { --accent: var(--cyan); }
+  .pillar.p2 { --accent: var(--mint); }
+  .pillar.p3 { --accent: var(--gold); }
+  .pillar h3 {
+    font-family: var(--sans); font-weight: 600; font-size: 13px;
+    color: var(--cream); margin-bottom: 4px;
+  }
+  .pillar p { font-family: var(--sans); font-size: 12px; color: var(--g9); line-height: 1.5; }
+
+  /* ===== Video segments ===== */
+  .segment-tag {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-family: var(--sans); font-size: 11px; font-weight: 700;
+    letter-spacing: 1.8px; color: var(--cyan);
+    text-transform: uppercase; margin-bottom: 14px;
+    padding: 6px 14px;
+    border: 1px solid rgba(92,206,255,.35);
+    border-radius: 4px;
+    background: rgba(92,206,255,.05);
+  }
+  .segment-tag .seg-num { color: var(--cream); font-weight: 700; }
+  .video-meta {
+    color: var(--g6); font-family: var(--sans);
+    font-size: 13px; margin-bottom: 14px;
+  }
+  .video-frame {
+    position: relative; max-width: 800px;
+    margin: 24px auto 22px; aspect-ratio: 16 / 9;
+    background: #000;
+    border: 1px solid var(--border); border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 18px 48px rgba(0,0,0,.5);
+  }
+  .video-frame iframe { width: 100%; height: 100%; border: 0; }
+
+  .theory-card {
+    background: rgba(111,112,246,.04);
+    border: 1px solid rgba(111,112,246,.2);
+    border-left: 3px solid var(--purple);
+    border-radius: 8px;
+    padding: 22px 24px;
+    margin: 0 auto 28px;
+    max-width: 720px;
+    text-align: left;
+  }
+  .theory-card .theory-tag {
+    font-family: var(--sans); font-size: 11px; font-weight: 700;
+    letter-spacing: 1.5px; color: var(--purple);
+    text-transform: uppercase; margin-bottom: 8px;
+  }
+  .theory-card p {
+    font-family: var(--sans); font-size: 15px;
+    color: var(--cream); line-height: 1.65;
+  }
+  .theory-card p strong { color: var(--gold); font-weight: 600; }
+  .theory-card p em { color: var(--cyan); font-family: var(--serif); font-style: italic; }
+
+  /* ===== Practice common: case counter ===== */
+  .practice-block { max-width: 760px; margin: 0 auto; text-align: left; }
+
+  .case-counter {
+    display: inline-flex; align-items: center; gap: 14px;
+    background: rgba(111,112,246,0.1);
+    border: 1px solid rgba(111,112,246,0.4);
+    border-radius: 999px;
+    padding: 9px 18px; margin-bottom: 20px;
+    font-family: var(--sans);
+  }
+  .case-counter .cc-text { font-size: 15px; font-weight: 600; color: var(--cream); letter-spacing: .3px; }
+  .case-counter .cc-num { color: var(--purple); font-weight: 700; font-size: 17px; }
+  .case-counter .cc-divider { width: 1px; height: 14px; background: rgba(111,112,246,0.35); }
+  .case-counter .cc-dots { display: inline-flex; gap: 6px; }
+  .case-counter .cc-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: transparent; border: 1px solid rgba(111,112,246,0.5);
+    transition: all .3s;
+  }
+  .case-counter .cc-dot.active {
+    background: var(--purple); border-color: var(--purple);
+    box-shadow: 0 0 10px rgba(111,112,246,0.6); transform: scale(1.15);
+  }
+  .case-counter .cc-dot.done { background: rgba(111,112,246,0.6); border-color: var(--purple); }
+
+  .case-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 28px 30px;
+    margin: 0 auto 22px; max-width: 760px;
+    position: relative;
+  }
+  .case-card::before {
+    content: ''; position: absolute; top: 0; left: 0;
+    width: 4px; height: 100%; background: var(--purple);
+    border-radius: 4px 0 0 4px;
+  }
+  .case-quote {
+    font-family: var(--serif); font-size: clamp(18px, 1.9vw, 22px);
+    font-style: italic; color: var(--cream); line-height: 1.5;
+    margin-bottom: 8px;
+  }
+  .case-attribution { font-family: var(--sans); font-size: 12px; color: var(--g6); letter-spacing: .5px; }
+
+  .answers-prompt {
+    font-family: var(--sans); font-weight: 600; font-size: 14px;
+    color: var(--cream); margin: 22px 0 14px; letter-spacing: .3px;
+  }
+  .answers { display: flex; flex-direction: column; gap: 10px; }
+  .answer-btn {
+    padding: 16px 20px;
+    background: rgba(244,244,230,.025); border: 1px solid var(--border);
+    border-radius: 10px; color: var(--cream);
+    font-family: var(--sans); font-size: 14.5px;
+    cursor: pointer; transition: all .25s;
+    text-align: left; line-height: 1.5; position: relative;
+  }
+  .answer-btn:hover {
+    border-color: var(--purple); background: rgba(111,112,246,.06);
+    transform: translateX(2px);
+  }
+  .answer-btn.correct {
+    border-color: var(--mint); background: rgba(87,255,167,.08);
+  }
+  .answer-btn.correct::after {
+    content: '✓'; position: absolute; top: 12px; right: 16px;
+    color: var(--mint); font-weight: 700; font-size: 16px;
+  }
+  .answer-btn.wrong {
+    border-color: var(--coral); background: rgba(240,96,80,.06);
+    animation: shake .5s;
+  }
+  .answer-btn.wrong::after {
+    content: '✗'; position: absolute; top: 12px; right: 16px;
+    color: var(--coral); font-weight: 700; font-size: 16px;
+  }
+  .answer-btn.faded { opacity: .35; pointer-events: none; }
+  .answer-btn:disabled { cursor: default; }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-3px); }
+    80% { transform: translateX(3px); }
+  }
+
+  .feedback-card {
+    margin-top: 18px; padding: 18px 22px;
+    border-radius: 8px;
+    border-left: 3px solid var(--purple);
+    background: rgba(111,112,246,.06);
+    opacity: 0; max-height: 0; overflow: hidden;
+    transition: opacity .4s, max-height .4s, padding .4s;
+  }
+  .feedback-card.show { opacity: 1; max-height: 400px; }
+  .feedback-card.mint { border-left-color: var(--mint); background: rgba(87,255,167,.06); }
+  .feedback-card.coral { border-left-color: var(--coral); background: rgba(240,96,80,.06); }
+  .feedback-card .fb-tag {
+    font-family: var(--sans); font-size: 11px; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--purple); margin-bottom: 6px;
+  }
+  .feedback-card.mint .fb-tag { color: var(--mint); }
+  .feedback-card.coral .fb-tag { color: var(--coral); }
+  .feedback-card p {
+    font-family: var(--sans); font-size: 14px; color: var(--cream);
+    line-height: 1.6; margin-bottom: 8px;
+  }
+  .feedback-card p:last-of-type { margin-bottom: 0; }
+  .feedback-card p strong { color: var(--gold); font-weight: 600; }
+  .next-btn {
+    margin-top: 14px; padding: 10px 22px;
+    border-radius: 6px; background: transparent;
+    border: 1px solid var(--purple); color: var(--purple);
+    font-family: var(--sans); font-weight: 600; font-size: 13px;
+    cursor: pointer; transition: all .2s;
+  }
+  .next-btn:hover { background: var(--purple); color: var(--cream); }
+
+  /* ===== Practice 2: Drag & match ===== */
+  .match-arena {
+    display: grid; grid-template-columns: 1fr 1.2fr;
+    gap: 22px; margin: 22px 0;
+  }
+  @media (max-width: 720px) { .match-arena { grid-template-columns: 1fr; } }
+  .match-col h4 {
+    font-family: var(--sans); font-size: 11px; font-weight: 700;
+    letter-spacing: 1.5px; color: var(--g6);
+    text-transform: uppercase; margin-bottom: 12px;
+  }
+  .match-pool { display: flex; flex-direction: column; gap: 8px; }
+  .draggable {
+    padding: 12px 14px;
+    background: rgba(111,112,246,.08);
+    border: 1px solid rgba(111,112,246,.4);
+    border-radius: 8px; color: var(--cream);
+    font-family: var(--sans); font-size: 13.5px;
+    cursor: grab; user-select: none;
+    transition: transform .15s, box-shadow .15s;
+    line-height: 1.45;
+  }
+  .draggable:active { cursor: grabbing; transform: scale(1.02); }
+  .draggable.placed {
+    opacity: .35; pointer-events: none;
+    background: rgba(255,255,255,.025); border-color: var(--g4);
+  }
+  .dropzones { display: flex; flex-direction: column; gap: 10px; }
+  .dropzone {
+    padding: 16px; min-height: 88px;
+    background: rgba(255,255,255,.025);
+    border: 1.5px dashed var(--border);
+    border-radius: 10px; transition: all .25s;
+  }
+  .dropzone.over {
+    background: rgba(111,112,246,.06); border-color: var(--purple);
+    box-shadow: 0 0 14px rgba(111,112,246,.25);
+  }
+  .dropzone .dz-label {
+    font-family: var(--serif); font-size: 16px; font-style: italic;
+    color: var(--accent, var(--purple)); margin-bottom: 4px;
+  }
+  .dropzone[data-need="safety"] { --accent: var(--cyan); }
+  .dropzone[data-need="understanding"] { --accent: var(--mint); }
+  .dropzone[data-need="hope"] { --accent: var(--gold); }
+  .dropzone .dz-desc { font-family: var(--sans); font-size: 11.5px; color: var(--g6); margin-bottom: 8px; line-height: 1.4; }
+  .dropzone .dz-items { display: flex; flex-wrap: wrap; gap: 6px; }
+  .dropzone .placed-item {
+    padding: 6px 10px; background: rgba(87,255,167,.1);
+    border: 1px solid rgba(87,255,167,.4); border-radius: 6px;
+    color: var(--cream); font-size: 12px;
+  }
+
+  /* ===== Practice 3: Reveal Layers ===== */
+  .reveal-arena { max-width: 760px; margin: 0 auto; }
+  .reveal-quote {
+    background: var(--card); border: 1px solid var(--border);
+    border-left: 4px solid var(--gold);
+    border-radius: 12px; padding: 24px 28px;
+    margin-bottom: 22px;
+  }
+  .reveal-quote .case-quote { font-size: clamp(18px, 1.9vw, 22px); margin-bottom: 6px; }
+  .reveal-quote .case-attribution { font-size: 12px; }
+
+  .layer-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px 24px;
+    margin-bottom: 14px;
+    position: relative;
+    transition: opacity .4s, transform .4s, border-color .4s;
+  }
+  .layer-card.locked {
+    opacity: .35; pointer-events: none; transform: scale(.98);
+  }
+  .layer-card.unlocked {
+    opacity: 1; pointer-events: auto;
+  }
+  .layer-card .layer-head {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 14px;
+  }
+  .layer-card .layer-num {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: rgba(111,112,246,.12);
+    border: 1px solid rgba(111,112,246,.5);
+    color: var(--purple);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--serif); font-weight: 600; font-size: 14px;
+  }
+  .layer-card.solved .layer-num {
+    background: var(--mint); color: #0a1410;
+    border-color: var(--mint);
+  }
+  .layer-card .layer-title {
+    font-family: var(--serif); font-size: 18px;
+    color: var(--cream); flex: 1;
+  }
+  .layer-card .layer-tag {
+    font-family: var(--sans); font-size: 10px; font-weight: 700;
+    letter-spacing: 1.5px; color: var(--g6);
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 3px;
+    background: rgba(255,255,255,.04);
+  }
+  .layer-card.solved .layer-tag {
+    color: var(--mint); background: rgba(87,255,167,.08);
+  }
+  .layer-card .layer-question {
+    font-family: var(--sans); font-size: 15px;
+    color: var(--cream); margin-bottom: 14px;
+  }
+  .layer-card .answers { gap: 8px; }
+  .layer-card .answer-btn { font-size: 14px; padding: 14px 18px; }
+
+  /* ===== Final test ===== */
+  .test-progress {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--sans); font-size: 13px; color: var(--g6);
+    margin-bottom: 14px;
+  }
+  .test-progress .tp-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: rgba(255,255,255,.1);
+    border: 1px solid var(--g4);
+  }
+  .test-progress .tp-dot.active { background: var(--purple); border-color: var(--purple); }
+  .test-progress .tp-dot.done { background: var(--mint); border-color: var(--mint); }
+
+  /* ===== Finale ===== */
+  .final-score {
+    font-family: var(--serif);
+    font-size: clamp(64px, 10vw, 130px);
+    font-weight: 400; color: var(--cream);
+    line-height: 1; margin: 14px 0 8px;
+  }
+  .final-score .xp-suffix {
+    font-family: var(--sans); font-size: 16px;
+    color: var(--purple); margin-left: 12px;
+    letter-spacing: 1.5px; text-transform: uppercase;
+  }
+  .summary-grid {
+    margin: 30px 0;
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+  }
+  @media (max-width: 600px) { .summary-grid { grid-template-columns: 1fr; } }
+  .summary-stat {
+    padding: 18px 18px;
+    background: var(--card); border: 1px solid var(--border);
+    border-left: 2px solid var(--accent, var(--purple));
+    border-radius: 10px; text-align: left;
+  }
+  .summary-stat.s1 { --accent: var(--cyan); }
+  .summary-stat.s2 { --accent: var(--gold); }
+  .summary-stat.s3 { --accent: var(--mint); }
+  .summary-stat .ss-label {
+    font-family: var(--sans); font-size: 11px;
+    letter-spacing: 1.2px; color: var(--g6);
+    text-transform: uppercase; margin-bottom: 6px;
+  }
+  .summary-stat .ss-value {
+    font-family: var(--serif); font-size: 28px;
+    color: var(--cream); line-height: 1;
+  }
+  .summary-stat .ss-value span {
+    font-size: 16px; color: var(--g9); margin-left: 4px;
+  }
+  .summary-stat .ss-desc {
+    font-family: var(--sans); font-size: 12px;
+    color: var(--g9); margin-top: 6px; line-height: 1.5;
+  }
+
+  .next-lesson-cta {
+    display: inline-flex; align-items: center; gap: 14px;
+    margin-top: 30px;
+    padding: 18px 28px;
+    background: linear-gradient(135deg, var(--purple), var(--magenta));
+    color: var(--cream); border: none; border-radius: 8px;
+    font-family: var(--sans); font-weight: 600; font-size: 15px;
+    cursor: pointer; text-decoration: none;
+    box-shadow: 0 6px 28px rgba(111,112,246,.4);
+    transition: all .25s;
+  }
+  .next-lesson-cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 38px rgba(111,112,246,.6);
+  }
+  .next-lesson-cta .arrow {
+    font-size: 18px; transition: transform .2s;
+  }
+  .next-lesson-cta:hover .arrow { transform: translateX(4px); }
+  .next-placeholder-note {
+    font-family: var(--sans); font-style: italic;
+    font-size: 12px; color: var(--g6);
+    margin-top: 10px;
+  }
+  .restart-btn {
+    margin-top: 14px;
+    padding: 10px 24px; border-radius: 6px;
+    background: transparent; border: 1px solid var(--g4);
+    color: var(--g9); font-family: var(--sans);
+    font-size: 13px; cursor: pointer; transition: all .25s;
+  }
+  .restart-btn:hover { border-color: var(--purple); color: var(--purple); }
+
+  /* ===== XP popup ===== */
+  .xp-pop {
+    position: fixed; pointer-events: none; z-index: 60;
+    font-family: var(--sans); font-weight: 700;
+    font-size: 20px; color: var(--mint);
+    text-shadow: 0 0 12px rgba(87,255,167,.5);
+  }
+  .xp-pop.combo {
+    color: var(--gold);
+    text-shadow: 0 0 12px rgba(255,198,10,.6);
+  }
+
+  .pulse-ring {
+    position: fixed; pointer-events: none; z-index: 55;
+    border-radius: 50%; border: 2px solid var(--purple);
+    animation: pulseExpand 1.4s ease-out forwards;
+  }
+  @keyframes pulseExpand {
+    0% { width: 60px; height: 60px; opacity: 1; transform: translate(-50%,-50%); }
+    100% { width: 360px; height: 360px; opacity: 0; transform: translate(-50%,-50%); }
+  }
+
+  /* ===== Fullscreen ===== */
+  .fullscreen-btn {
+    position: fixed; bottom: 22px; right: 22px;
+    z-index: 70; width: 52px; height: 52px;
+    border-radius: 50%; background: var(--card);
+    border: 1px solid rgba(111,112,246,.4); color: var(--purple);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 18px rgba(0,0,0,.4), 0 0 14px rgba(111,112,246,.2);
+    transition: all .3s;
+  }
+  .fullscreen-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 24px rgba(0,0,0,.6), 0 0 24px rgba(111,112,246,.4);
+    border-color: var(--purple);
+  }
+  .fullscreen-btn svg { width: 22px; height: 22px; }
+  .fullscreen-btn .fs-tooltip {
+    position: absolute; right: calc(100% + 12px); top: 50%;
+    transform: translateY(-50%) translateX(8px);
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 6px; padding: 7px 14px;
+    font-family: var(--sans); font-size: 12px;
+    color: var(--cream); white-space: nowrap;
+    opacity: 0; pointer-events: none;
+    transition: opacity .2s, transform .2s;
+  }
+  .fullscreen-btn:hover .fs-tooltip { opacity: 1; transform: translateY(-50%) translateX(0); }
+</style>
+</head>
+<body>
+  <div class="bg-blobs">
+    <div class="bg-blob b1"></div>
+    <div class="bg-blob b2"></div>
+    <div class="bg-blob b3"></div>
+  </div>
+
+  <header class="hud">
+    <div class="logo">Nebula <span class="dot"></span> урок</div>
+    <div class="progress-wrap"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="streak-pill" id="streakPill" title="Серія правильних відповідей поспіль">
+      <span class="flame">🔥</span><span id="streakVal">0</span><span class="mult" id="streakMult"></span>
+    </div>
+    <div class="score-pill"><span class="xp-tag">XP</span><span id="scoreVal">0</span></div>
+  </header>
+
+  <!-- ============ INTRO ============ -->
+  <section id="intro">
+    <div class="container">
+      <div class="section-tag">Урок · вступ</div>
+      <h1 class="title">Що насправді стоїть<br>за запитом клієнта</h1>
+      <p class="intro-text">
+        Коли клієнт запитує: «Він повернеться до мене?» — здається, що йому потрібно почути <em>«так»</em> або <em>«ні»</em>. Але під цим запитанням майже завжди ховається щось значно глибше: <strong>«Мене ще люблять?»</strong>, <strong>«Я залишуся одна?»</strong>, <strong>«Я втратив щось назавжди?»</strong>. У цьому уроці ти потренуєш, як <em>побачити</em> справжню потребу — перш ніж відповідати на поверхневі слова.
+      </p>
+
+      <div class="how-it-works">
+        <div class="hiw-tag">Як проходити цей урок</div>
+        <div class="hiw-steps">
+          <div class="hiw-step">
+            <div class="hiw-num">1</div>
+            <div>Урок розбитий на <strong>3 сегменти</strong>. У кожному — короткий фрагмент відеолекції + практичне завдання.</div>
+          </div>
+          <div class="hiw-step">
+            <div class="hiw-num">2</div>
+            <div>За правильні дії отримуєш <strong>XP</strong>. Кілька правильних поспіль активують <strong>стрик</strong> 🔥 з множником: 2 в ряд = ×1.2, 3 = ×1.5, 4+ = ×2.0. Помилка скидає стрик.</div>
+          </div>
+          <div class="hiw-step">
+            <div class="hiw-num">3</div>
+            <div>У кінці — <strong>фінальний тест</strong> з 3 питань без підказок. Він покаже, чи закріпився матеріал.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pillars">
+        <div class="pillar p1">
+          <h3>Безпека</h3>
+          <p>«Не посилюй мою розгубленість». Спокійна присутність, повільний темп, визнання тривоги.</p>
+        </div>
+        <div class="pillar p2">
+          <h3>Розуміння</h3>
+          <p>«Побач мене». Відображення емоції перед порадою. Інакше клієнт повторюється.</p>
+        </div>
+        <div class="pillar p3">
+          <h3>Надія</h3>
+          <p>«Не залиш мене сам зі страхом». Заземлений оптимізм, орієнтація на можливість.</p>
+        </div>
+      </div>
+
+      <button class="cta" id="introCta">Розпочати урок &nbsp;↓</button>
+    </div>
+  </section>
+
+  <!-- ============ SEGMENT 1 ============ -->
+  <section id="seg1">
+    <div class="container">
+      <div class="segment-tag">Сегмент <span class="seg-num">1</span> · з 3 · ілюзія простого запитання</div>
+      <h2 class="title">Що клієнт насправді хоче почути</h2>
+      <p class="subtitle">Подивись першу частину лекції (≈ 2 хв 40 сек), а потім розбери два кейси.</p>
+
+      <div class="video-frame">
+        <iframe src="https://drive.google.com/file/d/1utAXEC22Q6wM8GPZkgCRo6LEh3P2k_B2/preview?t=0" allow="autoplay; fullscreen" allowfullscreen></iframe>
+      </div>
+
+      <div class="theory-card">
+        <div class="theory-tag">Ключова ідея</div>
+        <p>Поверхневе запитання клієнта — рідко повна картина. Якщо ти відповідаєш лише на нього, людина повертається з тим самим питанням, бо її <strong>глибинна емоційна потреба</strong> так і не була закрита. Одне просте речення на кшталт <em>«Я бачу, що ця ситуація змушує тебе почуватися невпевнено»</em> часто заспокоює більше, ніж будь-яке передбачення.</p>
+      </div>
+
+      <div class="practice-block" id="practice1"></div>
+    </div>
+  </section>
+
+  <!-- ============ SEGMENT 2 ============ -->
+  <section id="seg2">
+    <div class="container">
+      <div class="segment-tag">Сегмент <span class="seg-num">2</span> · з 3 · три потреби</div>
+      <h2 class="title">Безпека · Розуміння · Надія</h2>
+      <p class="subtitle">Подивись другу частину лекції (≈ 2 хв), потім розклади 6 запитів клієнтів за трьома потребами.</p>
+
+      <div class="video-frame">
+        <iframe src="https://drive.google.com/file/d/1utAXEC22Q6wM8GPZkgCRo6LEh3P2k_B2/preview?t=162" allow="autoplay; fullscreen" allowfullscreen></iframe>
+      </div>
+
+      <div class="theory-card">
+        <div class="theory-tag">Ключова ідея</div>
+        <p>За кожним запитом стоїть базова людська потреба — у <em>безпеці</em>, <em>розумінні</em> або <em>надії</em>. <strong>Тривожні</strong> клієнти шукають стабільну присутність. <strong>Ті, хто почувається непочутими</strong>, — відображення їхніх почуттів, перед тим як давати поради. <strong>Ті, хто застрягли</strong>, — заземлений оптимізм, віру в те, що рух можливий.</p>
+      </div>
+
+      <div class="practice-block" id="practice2"></div>
+    </div>
+  </section>
+
+  <!-- ============ SEGMENT 3 ============ -->
+  <section id="seg3">
+    <div class="container">
+      <div class="segment-tag">Сегмент <span class="seg-num">3</span> · з 3 · правило, яке змінює все</div>
+      <h2 class="title">Спостереження перед реакцією</h2>
+      <p class="subtitle">Подивись третю частину лекції (≈ 1 хв 30 сек), потім розкрий шари одного складного кейсу.</p>
+
+      <div class="video-frame">
+        <iframe src="https://drive.google.com/file/d/1utAXEC22Q6wM8GPZkgCRo6LEh3P2k_B2/preview?t=278" allow="autoplay; fullscreen" allowfullscreen></iframe>
+      </div>
+
+      <div class="theory-card">
+        <div class="theory-tag">Ключова ідея</div>
+        <p>Перш ніж реагувати на слова клієнта, зупинись і відчуй, що він переживає. <strong>Емоційний корінь</strong> — тривога, прив'язаність, страх втрати — говорить тобі про реакцію значно більше, ніж самі слова. Клієнти забудуть точні слова твого рідингу, але <em>завжди пам'ятатимуть, як почувалися</em> поряд з тобою.</p>
+      </div>
+
+      <div class="practice-block" id="practice3"></div>
+    </div>
+  </section>
+
+  <!-- ============ FINAL TEST ============ -->
+  <section id="finalTest">
+    <div class="container">
+      <div class="section-tag">Урок · фінальний тест</div>
+      <h2 class="title">Чи закріпилось?</h2>
+      <p class="subtitle">3 питання поспіль — без підказок, без пояснень між ними. Це справжня перевірка.</p>
+
+      <div class="practice-block" id="finalTestBlock"></div>
+    </div>
+  </section>
+
+  <!-- ============ FINALE ============ -->
+  <section id="finale">
+    <div class="container" style="max-width: 760px;">
+      <div class="section-tag">Урок · підсумок</div>
+      <h2 class="title">Готово</h2>
+      <div class="final-score"><span id="finalScore">0</span><span class="xp-suffix">XP</span></div>
+      <p class="subtitle" style="margin: 0 auto 16px;">Тепер у тебе в руках сильніший професійний інструмент — здатність бачити справжню потребу за запитом клієнта.</p>
+
+      <div class="summary-grid">
+        <div class="summary-stat s1">
+          <div class="ss-label">Точність</div>
+          <div class="ss-value" id="accuracyStat">— <span>%</span></div>
+          <div class="ss-desc">правильних відповідей серед усіх</div>
+        </div>
+        <div class="summary-stat s2">
+          <div class="ss-label">Найкращий стрик</div>
+          <div class="ss-value" id="bestStreakStat">— <span>в ряд</span></div>
+          <div class="ss-desc">скільки правильних поспіль ти зібрала</div>
+        </div>
+        <div class="summary-stat s3">
+          <div class="ss-label">Фінальний тест</div>
+          <div class="ss-value" id="testStat">— <span>/ 3</span></div>
+          <div class="ss-desc">правильних у фінальному тесті без підказок</div>
+        </div>
+      </div>
+
+      <a class="next-lesson-cta" id="nextLessonCta" href="#">Наступний урок <span class="arrow">→</span></a>
+      <div class="next-placeholder-note">посилання на наступний модуль додамо, коли його буде створено</div>
+
+      <div><button class="restart-btn" id="restartBtn">↻ Пройти знову</button></div>
+    </div>
+  </section>
+
+  <!-- ============ Fullscreen ============ -->
+  <button class="fullscreen-btn" id="fullscreenBtn" aria-label="Toggle fullscreen">
+    <span class="fs-tooltip" id="fsTooltip">На весь екран</span>
+    <svg id="fsIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="15 3 21 3 21 9"/>
+      <polyline points="9 21 3 21 3 15"/>
+      <line x1="21" y1="3" x2="14" y2="10"/>
+      <line x1="3" y1="21" x2="10" y2="14"/>
+    </svg>
+  </button>
+
+<script>
+/* ============================================================
+   STATE
+   ============================================================ */
+const state = {
+  score: 0,
+  streak: 0,
+  bestStreak: 0,
+  totalAnswers: 0,
+  correctAnswers: 0,
+  testScore: 0
+};
+const TOTAL_STAGES = 7; // intro, 3 segs, 3 final test questions
+
+function getMultiplier(streak) {
+  if (streak >= 4) return 2.0;
+  if (streak >= 3) return 1.5;
+  if (streak >= 2) return 1.2;
+  return 1.0;
+}
+function setScore(target) {
+  const startVal = state.score;
+  state.score = target;
+  const obj = { v: startVal };
+  gsap.to(obj, {
+    v: target, duration: 0.8, ease: 'power2.out',
+    onUpdate: () => { document.getElementById('scoreVal').textContent = Math.round(obj.v); }
+  });
+}
+function popXp(n, el, isCombo) {
+  const pop = document.createElement('div');
+  pop.className = 'xp-pop' + (isCombo ? ' combo' : '');
+  pop.textContent = (n >= 0 ? '+' : '') + n + ' XP';
+  if (n < 0) { pop.style.color = 'var(--coral)'; pop.style.textShadow = '0 0 12px rgba(240,96,80,.5)'; }
+  document.body.appendChild(pop);
+  let x = window.innerWidth/2, y = window.innerHeight/2;
+  if (el && el.getBoundingClientRect) {
+    const r = el.getBoundingClientRect();
+    x = r.left + r.width/2; y = r.top + r.height/2;
+  }
+  pop.style.left = x + 'px'; pop.style.top = y + 'px';
+  gsap.fromTo(pop,
+    { y: 0, opacity: 0, scale: .7 },
+    { y: -60, opacity: 1, scale: 1.15, duration: 0.45, ease: 'back.out(2)' });
+  gsap.to(pop, { opacity: 0, y: -130, duration: 0.7, delay: 0.5, onComplete: () => pop.remove() });
+}
+function updateStreakUI() {
+  const pill = document.getElementById('streakPill');
+  document.getElementById('streakVal').textContent = state.streak;
+  const m = getMultiplier(state.streak);
+  document.getElementById('streakMult').textContent = state.streak >= 2 ? `×${m}` : '';
+  if (state.streak >= 2) pill.classList.add('active');
+  else pill.classList.remove('active');
+}
+function recordAnswer(correct, baseXP, originEl) {
+  state.totalAnswers++;
+  if (correct) {
+    state.correctAnswers++;
+    state.streak++;
+    state.bestStreak = Math.max(state.bestStreak, state.streak);
+    const m = getMultiplier(state.streak);
+    const earned = Math.round(baseXP * m);
+    setScore(state.score + earned);
+    popXp(earned, originEl, m > 1);
+  } else {
+    state.streak = 0;
+    // small penalty on miss to make stakes real, but light
+    setScore(Math.max(0, state.score - 3));
+    popXp(-3, originEl);
+  }
+  updateStreakUI();
+}
+function bumpProgress(stage) {
+  const pct = Math.min(100, (stage / TOTAL_STAGES) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+function pulseAt(x, y, color = 'var(--purple)') {
+  const ring = document.createElement('div');
+  ring.className = 'pulse-ring';
+  ring.style.left = x + 'px';
+  ring.style.top = y + 'px';
+  if (color) ring.style.borderColor = color;
+  document.body.appendChild(ring);
+  setTimeout(() => ring.remove(), 1500);
+}
+
+/* ============================================================
+   GSAP scroll reveals
+   ============================================================ */
+gsap.registerPlugin(ScrollTrigger);
+gsap.from('h1.title, .intro-text, .how-it-works, .pillars, #introCta', {
+  opacity: 0, y: 30, duration: 1, ease: 'power3.out',
+  stagger: 0.12, delay: 0.2
+});
+document.querySelectorAll('section').forEach(sec => {
+  if (sec.id === 'intro') return;
+  gsap.from(sec.querySelector('.container'), {
+    scrollTrigger: { trigger: sec, start: 'top 75%', toggleActions: 'play none none reverse' },
+    y: 40, opacity: 0, duration: 0.9, ease: 'power3.out'
+  });
+});
+
+document.getElementById('introCta').addEventListener('click', () => {
+  document.getElementById('seg1').scrollIntoView({ behavior: 'smooth' });
+});
+
+/* ============================================================
+   PRACTICE 1 — Multi-choice "What client really wants to hear"
+   ============================================================ */
+const practice1Cases = [
+  {
+    quote: '«Він повернеться до мене?»',
+    attribution: 'клієнтка, перший раз на сесії',
+    prompt: 'Яка відповідь визнає справжню потребу клієнтки?',
+    answers: [
+      { text: '«Так, точно повернеться, не хвилюйся — карти показують позитивні знаки.»', correct: false,
+        why: '<strong>Хибне заспокоєння + літеральне передбачення.</strong> Клієнтка не отримує визнання своєї тривоги, лишається залежною від твого "так". А якщо не повернеться — довіра до тебе зруйнована.' },
+      { text: '«Я бачу, що ця ситуація змушує тебе почуватися невпевнено. За цим запитанням, мабуть, ховається щось більше — мене ще люблять? я не сама?»', correct: true,
+        why: '<strong>Визнання емоційного кореня.</strong> Ти не передбачаєш — ти показуєш, що бачиш справжню потребу. Це закриває внутрішню напругу і відкриває простір для глибшої розмови.' },
+      { text: '«Дай йому час, все буде як буде. Не зациклюйся на цьому.»', correct: false,
+        why: '<strong>Уникання моменту.</strong> Це не рада і не підтримка — це закриття теми. Клієнтка отримує сигнал: "тут не варто заглиблюватись".' },
+      { text: '«Карти показують, що повернеться через 2-3 тижні, після того як обдумає.»', correct: false,
+        why: '<strong>Літеральне передбачення без емоційного шару.</strong> Навіть якщо ти бачиш патерн у картах — клієнтка прийшла не за датою, а за відчуттям, що з нею все буде гаразд. Без визнання потреби передбачення прозвучить порожньо.' }
+    ]
+  },
+  {
+    quote: '«Що мені робити з цією роботою? Я просто… не знаю. Не знаю.»',
+    attribution: 'клієнт, постійний',
+    prompt: 'Який перший хід найкраще відкриває контакт?',
+    answers: [
+      { text: '«Зміни роботу. Ти заслуговуєш на краще, я бачу це в твоїй карті.»', correct: false,
+        why: '<strong>Директива замість контакту.</strong> Клієнт ще не сказав, що хоче рішення — він озвучив розгубленість. Поспішна порада звучить як тиск.' },
+      { text: '«Чую, що ти зараз у моменті, де багато всього незрозуміло. Що ти зараз відчуваєш найсильніше — коли просто говориш це вголос?»', correct: true,
+        why: '<strong>Визнання + м\'яке поглиблення.</strong> Спершу ти підтверджуєш стан ("багато всього незрозуміло"), потім запрошуєш у глибший шар. Клієнт може видихнути і почати ясніше говорити.' },
+      { text: '«Дивись, перше — оновити резюме, друге — подумати про навики, третє…»', correct: false,
+        why: '<strong>Перестрибування емоційного шару.</strong> Це поради до людини, яка ще не закрила потребу бути почутою. Клієнт або погодиться "ага, так-так" і нічого не зробить, або відчує, що його не зрозуміли.' },
+      { text: '«Це випливе само по собі. Ти ж розумна людина.»', correct: false,
+        why: '<strong>Знецінення через комплімент.</strong> "Ти розумна" звучить підтримуюче, але насправді каже: "сама розберешся, не приходь з цим". Клієнт лишається сам зі своїм "не знаю".' }
+    ]
+  }
+];
+
+(function buildPractice1() {
+  const root = document.getElementById('practice1');
+  let i = 0;
+  function renderCase() {
+    if (i >= practice1Cases.length) {
+      bumpProgress(2);
+      const next = document.createElement('div');
+      next.style.textAlign = 'center';
+      next.style.marginTop = '20px';
+      next.innerHTML = '<button class="cta ghost" id="toSeg2">До сегмента 2 &nbsp;→</button>';
+      root.appendChild(next);
+      document.getElementById('toSeg2').addEventListener('click', () => {
+        document.getElementById('seg2').scrollIntoView({ behavior: 'smooth' });
+      });
+      return;
+    }
+    const c = practice1Cases[i];
+    const card = document.createElement('div');
+    card.className = 'case-card';
+    const dotsHTML = practice1Cases.map((_, k) => {
+      const cls = k < i ? 'done' : (k === i ? 'active' : '');
+      return `<span class="cc-dot ${cls}"></span>`;
+    }).join('');
+    card.innerHTML = `
+      <div class="case-counter">
+        <span class="cc-text">Кейс <span class="cc-num">${i+1}</span> з ${practice1Cases.length}</span>
+        <span class="cc-divider"></span>
+        <span class="cc-dots">${dotsHTML}</span>
+      </div>
+      <p class="case-quote">${c.quote}</p>
+      <p class="case-attribution">— ${c.attribution}</p>
+      <p class="answers-prompt">${c.prompt}</p>
+      <div class="answers"></div>
+      <div class="feedback-card"></div>
+    `;
+    root.appendChild(card);
+    const ansBox = card.querySelector('.answers');
+    const fb = card.querySelector('.feedback-card');
+    let answered = false;
+    c.answers.forEach((a) => {
+      const b = document.createElement('button');
+      b.className = 'answer-btn';
+      b.textContent = a.text;
+      b.addEventListener('click', () => {
+        if (answered) return;
+        answered = true;
+        const r = b.getBoundingClientRect();
+        if (a.correct) {
+          b.classList.add('correct');
+          recordAnswer(true, 25, b);
+          pulseAt(r.left+r.width/2, r.top+r.height/2, 'var(--mint)');
+          fb.className = 'feedback-card mint';
+          fb.innerHTML = `<div class="fb-tag">Влучно</div><p>${a.why}</p>
+            <button class="next-btn">Наступний кейс →</button>`;
+        } else {
+          b.classList.add('wrong');
+          recordAnswer(false, 0, b);
+          fb.className = 'feedback-card coral';
+          // mark correct one
+          ansBox.querySelectorAll('.answer-btn').forEach((btn, idx) => {
+            btn.disabled = true;
+            if (c.answers[idx].correct) btn.classList.add('correct');
+            else if (btn !== b) btn.classList.add('faded');
+          });
+          const correctOne = c.answers.find(x => x.correct);
+          fb.innerHTML = `<div class="fb-tag">Не зовсім</div><p>${a.why}</p>
+            <p style="margin-top:10px;"><strong>Правильна відповідь:</strong> ${correctOne.why}</p>
+            <button class="next-btn">Наступний кейс →</button>`;
+        }
+        requestAnimationFrame(() => fb.classList.add('show'));
+        fb.querySelector('.next-btn').addEventListener('click', () => {
+          i++;
+          renderCase();
+          card.nextElementSibling && card.nextElementSibling.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      });
+      ansBox.appendChild(b);
+    });
+  }
+  renderCase();
+})();
+
+/* ============================================================
+   PRACTICE 2 — Drag & match: 6 requests → 3 needs
+   ============================================================ */
+const matchItems = [
+  { text: '«Я постійно повертаюсь до однієї думки, мене ніхто не розуміє»', need: 'understanding' },
+  { text: '«Мені страшно, що я роблю щось не так»', need: 'safety' },
+  { text: '«Я зараз ніби в темному коридорі, не бачу куди йти»', need: 'hope' },
+  { text: '«Я знову і знову про це питаю, бо ніхто не реагує на те, що я кажу»', need: 'understanding' },
+  { text: '«А раптом це не вийде? Я не можу впоратись з невідомістю»', need: 'safety' },
+  { text: '«Чи є взагалі ймовірність, що ситуація зміниться?»', need: 'hope' }
+];
+
+(function buildPractice2() {
+  const root = document.getElementById('practice2');
+  const arena = document.createElement('div');
+  arena.innerHTML = `
+    <div class="match-arena">
+      <div class="match-col">
+        <h4>Запити клієнтів</h4>
+        <div class="match-pool" id="matchPool"></div>
+      </div>
+      <div class="match-col">
+        <h4>Базова потреба</h4>
+        <div class="dropzones">
+          <div class="dropzone" data-need="safety">
+            <div class="dz-label">Безпека</div>
+            <div class="dz-desc">Тривога, страх неконтрольованості. Шукають стабільну присутність.</div>
+            <div class="dz-items"></div>
+          </div>
+          <div class="dropzone" data-need="understanding">
+            <div class="dz-label">Розуміння</div>
+            <div class="dz-desc">Повторюються, не почуті. Шукають визнання емоції перед порадами.</div>
+            <div class="dz-items"></div>
+          </div>
+          <div class="dropzone" data-need="hope">
+            <div class="dz-label">Надія</div>
+            <div class="dz-desc">Застрягли, безпорадні. Шукають віри, що рух можливий.</div>
+            <div class="dz-items"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="feedback-card" id="matchFb"></div>
+  `;
+  root.appendChild(arena);
+
+  // shuffle
+  const items = [...matchItems].sort(() => Math.random() - 0.5);
+  const pool = root.querySelector('#matchPool');
+  items.forEach((it, idx) => {
+    const d = document.createElement('div');
+    d.className = 'draggable';
+    d.draggable = true;
+    d.dataset.need = it.need;
+    d.dataset.idx = idx;
+    d.textContent = it.text;
+    pool.appendChild(d);
+  });
+
+  let dragData = null;
+  let placedCount = 0;
+  const total = items.length;
+
+  pool.querySelectorAll('.draggable').forEach(d => {
+    d.addEventListener('dragstart', e => {
+      dragData = d;
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', d.dataset.need);
+      d.style.opacity = '.4';
+    });
+    d.addEventListener('dragend', () => { d.style.opacity = ''; });
+  });
+
+  root.querySelectorAll('.dropzone').forEach(z => {
+    z.addEventListener('dragover', e => { e.preventDefault(); z.classList.add('over'); });
+    z.addEventListener('dragleave', () => z.classList.remove('over'));
+    z.addEventListener('drop', e => {
+      e.preventDefault();
+      z.classList.remove('over');
+      if (!dragData) return;
+      const correct = dragData.dataset.need === z.dataset.need;
+      const r = z.getBoundingClientRect();
+      if (correct) {
+        const item = document.createElement('div');
+        item.className = 'placed-item';
+        item.textContent = '✓';
+        z.querySelector('.dz-items').appendChild(item);
+        dragData.classList.add('placed');
+        recordAnswer(true, 10, z);
+        pulseAt(r.left+r.width/2, r.top+r.height/2, 'var(--mint)');
+        placedCount++;
+        if (placedCount === total) {
+          // bonus
+          setTimeout(() => {
+            const fb = document.getElementById('matchFb');
+            fb.className = 'feedback-card mint show';
+            fb.innerHTML = `<div class="fb-tag">Усі 6 на місці</div>
+              <p>Ти бачиш, як одне й те саме слово може говорити про різні потреби. <strong>Запам'ятай головне:</strong> повторювані запити — це майже завжди потреба у розумінні; страх і "а раптом" — у безпеці; "куди йти, чи можливо" — у надії.</p>
+              <button class="next-btn" id="toSeg3">До сегмента 3 →</button>`;
+            document.getElementById('toSeg3').addEventListener('click', () => {
+              bumpProgress(3);
+              document.getElementById('seg3').scrollIntoView({ behavior: 'smooth' });
+            });
+          }, 400);
+        }
+      } else {
+        recordAnswer(false, 0, z);
+        gsap.fromTo(z, { x: 0 }, { x: 0, keyframes: [{ x: -8 }, { x: 8 }, { x: 0 }], duration: 0.4 });
+      }
+      dragData = null;
+    });
+  });
+})();
+
+/* ============================================================
+   PRACTICE 3 — Reveal Layers (3-step deep case)
+   ============================================================ */
+const revealCase = {
+  quote: '«Я вже не знаю, скільки разів я була в подібних стосунках. Завжди одне й те саме. Може мені вже не варто пробувати?»',
+  attribution: 'клієнтка, втрата відносин 4 місяці тому',
+  layers: [
+    {
+      tag: 'Шар 1 · поверхня',
+      title: 'Що клієнтка буквально каже?',
+      question: 'Перш ніж шукати глибинне — назви те, що лежить на поверхні. Який зміст у її словах?',
+      answers: [
+        { text: 'Вона визнає поразку і втратила інтерес до стосунків загалом.', correct: false,
+          why: 'Це інтерпретація, не сама поверхня. На поверхні — фактична констатація + питання, без однозначної поразки.' },
+        { text: 'Вона ставить тобі питання — чи варто їй продовжувати пробувати.', correct: true,
+          why: '<strong>Так, на поверхні це питання тобі.</strong> Але — обережно — за питанням майже ніколи не стоїть прохання дати буквальну відповідь "так" чи "ні".' },
+        { text: 'Вона хоче, щоб ти підказала, як знайти "правильного" партнера.', correct: false,
+          why: 'Цього вона не сказала. Це твоя здогадка, а не те, що звучить.' },
+        { text: 'Вона жаліється на колишнього і хоче поспівчуття.', correct: false,
+          why: 'Скарги на конкретну людину тут немає — є втома від патерну і сумнів у собі.' }
+      ]
+    },
+    {
+      tag: 'Шар 2 · емоційний корінь',
+      title: 'Що під цим питанням насправді?',
+      question: 'А тепер — за словами. Якій базовій потребі найочевидніше відгукується цей запит?',
+      answers: [
+        { text: 'Безпеці — вона боїться знову помилитись і хоче гарантій.', correct: false,
+          why: 'Ця складова є, але не головна. Слова "не варто пробувати" — не про страх дії, а про сумнів у власній цінності.' },
+        { text: 'Надії — вона шукає підтвердження, що щось взагалі може змінитись.', correct: true,
+          why: '<strong>Так, це про надію.</strong> Під питанням "чи варто пробувати" звучить: <em>"можливо я просто не та, з ким хочуть бути". Скажи, що це не так.</em> Вона потребує не прогнозу, а заземленого "ти варта спробувати".' },
+        { text: 'Розумінню — вона хоче, щоб її вислухали без поспіху.', correct: false,
+          why: 'Розуміння в неї вже є (вона це з тобою проговорює). Запит зараз — глибший: про відчуття власної вартості.' },
+        { text: 'Це не про базову потребу, це втома, треба просто перерва.', correct: false,
+          why: 'Втома є, але це лише симптом. Якщо зупинитись на втомі — пропустимо запит про надію.' }
+      ]
+    },
+    {
+      tag: 'Шар 3 · перша реакція',
+      title: 'Який твій перший хід?',
+      question: 'Тепер — як саме ти відгукуєшся, тримаючи в умі поверхню і корінь?',
+      answers: [
+        { text: '«Так, точно варто пробувати! Ще зустрінеш свою людину, я бачу.»', correct: false,
+          why: '<strong>Порожнє заспокоєння.</strong> Це звучить добре, але не закриває те, чого вона насправді просить — підтвердження своєї цінності, а не прогноз.' },
+        { text: '«Я чую, скільки в цьому втоми. І хочу спершу побути з тобою в цьому моменті. Як ти зараз себе відчуваєш — коли просто говориш це вголос?»', correct: true,
+          why: '<strong>Визнання + сповільнення + запрошення.</strong> Ти не кидаєшся з відповіддю, не передбачаєш. Ти показуєш, що чуєш втому і робиш паузу, щоб клієнтка сама побула в тому, що відчуває. Саме це закриває потребу і відкриває справжній контакт.' },
+        { text: '«Може ти хочеш проаналізувати, що було не так у попередніх стосунках? Розкажи про останнього.»', correct: false,
+          why: '<strong>Перестрибування на аналітику.</strong> Клієнтка ще в емоційному моменті — ти переводиш її в раціо. Вона погодиться розказувати, але потреба надії так і залишиться відкритою.' },
+        { text: '«Не зациклюйся. Кожен має свої кризи, це нормально, рухайся далі.»', correct: false,
+          why: '<strong>Знецінення через нормалізацію.</strong> "Це нормально" звучить підтримуюче, але читається як "не приходь з цим". Клієнтка відчує, що її переживання не має ваги.' }
+      ]
+    }
+  ]
+};
+
+(function buildPractice3() {
+  const root = document.getElementById('practice3');
+  const arena = document.createElement('div');
+  arena.className = 'reveal-arena';
+  arena.innerHTML = `
+    <div class="reveal-quote">
+      <p class="case-quote">${revealCase.quote}</p>
+      <p class="case-attribution">— ${revealCase.attribution}</p>
+    </div>
+    <div id="layers"></div>
+    <div class="feedback-card" id="revealComplete"></div>
+  `;
+  root.appendChild(arena);
+  const layersBox = arena.querySelector('#layers');
+
+  revealCase.layers.forEach((layer, idx) => {
+    const card = document.createElement('div');
+    card.className = 'layer-card ' + (idx === 0 ? 'unlocked' : 'locked');
+    card.innerHTML = `
+      <div class="layer-head">
+        <div class="layer-num">${idx+1}</div>
+        <div class="layer-title">${layer.title}</div>
+        <div class="layer-tag">${layer.tag}</div>
+      </div>
+      <p class="layer-question">${layer.question}</p>
+      <div class="answers"></div>
+      <div class="feedback-card"></div>
+    `;
+    layersBox.appendChild(card);
+
+    const ansBox = card.querySelector('.answers');
+    const fb = card.querySelector('.feedback-card');
+    let answered = false;
+    layer.answers.forEach(a => {
+      const b = document.createElement('button');
+      b.className = 'answer-btn';
+      b.textContent = a.text;
+      b.addEventListener('click', () => {
+        if (answered) return;
+        answered = true;
+        const r = b.getBoundingClientRect();
+        if (a.correct) {
+          b.classList.add('correct');
+          card.classList.add('solved');
+          recordAnswer(true, 25, b);
+          pulseAt(r.left+r.width/2, r.top+r.height/2, 'var(--mint)');
+          fb.className = 'feedback-card mint show';
+          const isLast = idx === revealCase.layers.length - 1;
+          fb.innerHTML = `<div class="fb-tag">${isLast ? 'Шар розкритий' : 'Розкритий — наступний шар відкривається'}</div>
+            <p>${a.why}</p>`;
+          if (!isLast) {
+            setTimeout(() => {
+              const nextCard = layersBox.children[idx+1];
+              if (nextCard) {
+                nextCard.classList.remove('locked');
+                nextCard.classList.add('unlocked');
+                nextCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }
+            }, 700);
+          } else {
+            // all 3 done
+            setTimeout(() => {
+              const done = document.getElementById('revealComplete');
+              done.className = 'feedback-card mint show';
+              done.innerHTML = `<div class="fb-tag">Усі 3 шари пройдені</div>
+                <p>Це і є <strong>Спостереження перед реакцією</strong>: спершу побачити поверхню, потім емоційний корінь, потім обрати реакцію. Коли цей рух стане автоматичним, ти будеш закривати потреби клієнтів задовго до того, як вони встигнуть повторити запит.</p>
+                <button class="next-btn" id="toFinalTest">До фінального тесту →</button>`;
+              document.getElementById('toFinalTest').addEventListener('click', () => {
+                bumpProgress(4);
+                document.getElementById('finalTest').scrollIntoView({ behavior: 'smooth' });
+              });
+            }, 800);
+          }
+        } else {
+          b.classList.add('wrong');
+          recordAnswer(false, 0, b);
+          // allow re-try without revealing
+          setTimeout(() => {
+            b.classList.remove('wrong');
+            answered = false;
+          }, 800);
+          fb.className = 'feedback-card coral show';
+          fb.innerHTML = `<div class="fb-tag">Не зовсім</div><p>${a.why}</p>`;
+        }
+      });
+      ansBox.appendChild(b);
+    });
+  });
+})();
+
+/* ============================================================
+   FINAL TEST — 3 questions, no per-question explanations
+   ============================================================ */
+const finalTestQuestions = [
+  {
+    q: 'Що означає правило «Спостереження перед реакцією»?',
+    answers: [
+      { text: 'Зачекати, поки клієнт не сформулює свій запит чітко.', correct: false },
+      { text: 'Перш ніж відповідати на слова — зупинитись і відчути, що клієнт переживає на емоційному рівні.', correct: true },
+      { text: 'Уважно слухати кожне слово і повторювати його за клієнтом.', correct: false },
+      { text: 'Спочатку дати інформацію, а вже потім реагувати на емоції.', correct: false }
+    ]
+  },
+  {
+    q: 'Клієнтка каже: "Я не знаю, чи я взагалі здатна полюбити". Яка з трьох базових потреб тут найочевидніша?',
+    answers: [
+      { text: 'Безпека — вона боїться зробити помилку.', correct: false },
+      { text: 'Розуміння — вона хоче, щоб її сумнів у собі побачили й визнали без поради.', correct: true },
+      { text: 'Надія — вона шукає прогноз майбутніх стосунків.', correct: false },
+      { text: 'Це поза трьома потребами — просто скарга.', correct: false }
+    ]
+  },
+  {
+    q: 'Клієнт повторює одне й те саме питання вже третю сесію поспіль. Що це найімовірніше означає?',
+    answers: [
+      { text: 'Він не зрозумів твоїх попередніх відповідей — треба пояснити простіше.', correct: false },
+      { text: 'Він тестує тебе і не довіряє повністю — треба бути впевненішою.', correct: false },
+      { text: 'Його емоційна потреба за цим питанням ще не була закрита — і він шукає визнання, а не нову інформацію.', correct: true },
+      { text: 'Він просто любить говорити — час перевести розмову на щось інше.', correct: false }
+    ]
+  }
+];
+
+(function buildFinalTest() {
+  const root = document.getElementById('finalTestBlock');
+  let i = 0;
+
+  function renderQuestion() {
+    if (i >= finalTestQuestions.length) {
+      // done — go to finale
+      const done = document.createElement('div');
+      done.style.textAlign = 'center';
+      done.style.marginTop = '24px';
+      done.innerHTML = `<button class="cta" id="toFinale">До підсумку &nbsp;→</button>`;
+      root.appendChild(done);
+      document.getElementById('toFinale').addEventListener('click', () => {
+        bumpProgress(7);
+        document.getElementById('finale').scrollIntoView({ behavior: 'smooth' });
+        setTimeout(triggerFinale, 700);
+      });
+      return;
+    }
+    const q = finalTestQuestions[i];
+    const card = document.createElement('div');
+    card.className = 'case-card';
+    const dotsHTML = finalTestQuestions.map((_, k) => {
+      const cls = k < i ? 'done' : (k === i ? 'active' : '');
+      return `<span class="tp-dot ${cls}"></span>`;
+    }).join('');
+    card.innerHTML = `
+      <div class="test-progress">
+        <span>Питання ${i+1} з ${finalTestQuestions.length}</span>
+        ${dotsHTML}
+      </div>
+      <p class="answers-prompt" style="font-size: 17px; margin-top: 4px;">${q.q}</p>
+      <div class="answers"></div>
+    `;
+    root.appendChild(card);
+
+    const ansBox = card.querySelector('.answers');
+    let answered = false;
+    q.answers.forEach(a => {
+      const b = document.createElement('button');
+      b.className = 'answer-btn';
+      b.textContent = a.text;
+      b.addEventListener('click', () => {
+        if (answered) return;
+        answered = true;
+        const r = b.getBoundingClientRect();
+        if (a.correct) {
+          b.classList.add('correct');
+          recordAnswer(true, 25, b);
+          state.testScore++;
+          pulseAt(r.left+r.width/2, r.top+r.height/2, 'var(--mint)');
+        } else {
+          b.classList.add('wrong');
+          recordAnswer(false, 0, b);
+          // mark correct one
+          ansBox.querySelectorAll('.answer-btn').forEach((btn, idx) => {
+            btn.disabled = true;
+            if (q.answers[idx].correct) btn.classList.add('correct');
+            else if (btn !== b) btn.classList.add('faded');
+          });
+        }
+        bumpProgress(4 + i + 1);
+        setTimeout(() => {
+          i++;
+          renderQuestion();
+          card.nextElementSibling && card.nextElementSibling.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 1100);
+      });
+      ansBox.appendChild(b);
+    });
+  }
+  renderQuestion();
+})();
+
+/* ============================================================
+   FINALE
+   ============================================================ */
+let finaleFired = false;
+function triggerFinale() {
+  if (finaleFired) return;
+  finaleFired = true;
+
+  const finalEl = document.getElementById('finalScore');
+  const obj = { v: 0 };
+  gsap.to(obj, {
+    v: state.score, duration: 2.0, ease: 'power2.out',
+    onUpdate: () => { finalEl.textContent = Math.round(obj.v); }
+  });
+
+  const acc = state.totalAnswers > 0 ? Math.round(state.correctAnswers / state.totalAnswers * 100) : 0;
+  document.getElementById('accuracyStat').innerHTML = `${acc} <span>%</span>`;
+  document.getElementById('bestStreakStat').innerHTML = `${state.bestStreak} <span>в ряд</span>`;
+  document.getElementById('testStat').innerHTML = `${state.testScore} <span>/ ${finalTestQuestions.length}</span>`;
+}
+ScrollTrigger.create({
+  trigger: '#finale', start: 'top 60%', once: true, onEnter: triggerFinale
+});
+
+document.getElementById('restartBtn').addEventListener('click', () => location.reload());
+
+/* ============================================================
+   FULLSCREEN
+   ============================================================ */
+(function setupFullscreen() {
+  const btn = document.getElementById('fullscreenBtn');
+  const tooltip = document.getElementById('fsTooltip');
+  const icon = document.getElementById('fsIcon');
+  const expandSVG = `
+    <polyline points="15 3 21 3 21 9"/>
+    <polyline points="9 21 3 21 3 15"/>
+    <line x1="21" y1="3" x2="14" y2="10"/>
+    <line x1="3" y1="21" x2="10" y2="14"/>`;
+  const compressSVG = `
+    <polyline points="4 14 10 14 10 20"/>
+    <polyline points="20 10 14 10 14 4"/>
+    <line x1="14" y1="10" x2="21" y2="3"/>
+    <line x1="3" y1="21" x2="10" y2="14"/>`;
+  btn.addEventListener('click', () => {
+    if (!document.fullscreenElement) {
+      const req = document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen;
+      if (req) req.call(document.documentElement);
+    } else {
+      const exit = document.exitFullscreen || document.webkitExitFullscreen;
+      if (exit) exit.call(document);
+    }
+  });
+  function syncIcon() {
+    const isFs = !!document.fullscreenElement;
+    icon.innerHTML = isFs ? compressSVG : expandSVG;
+    tooltip.textContent = isFs ? 'Вийти з повноекранного' : 'На весь екран';
+  }
+  document.addEventListener('fullscreenchange', syncIcon);
+  document.addEventListener('webkitfullscreenchange', syncIcon);
+  syncIcon();
+})();
+</script>
+</body>
+</html>
